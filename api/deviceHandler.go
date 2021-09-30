@@ -24,16 +24,20 @@ func (h *deviceHandler) Save(w http.ResponseWriter, r *http.Request) {
 	d.ID = primitive.NewObjectID()
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err := h.service.Save(&d)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	log.Printf("Device created, ID: %s", d.ID.Hex())
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	jsonData := []byte(fmt.Sprintf(`{"device ID": "%s"}`, d.ID.Hex()))
+	w.Write(jsonData)
 }
 
 func (h *deviceHandler) GetByID(w http.ResponseWriter, r *http.Request) {
