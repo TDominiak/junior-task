@@ -10,14 +10,16 @@ import (
 	"github.com/TDominiak/junior-task/domain/measurementUtils"
 	"github.com/TDominiak/junior-task/repository"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 
 	l := log.New(os.Stdout, "tsm: ", log.LstdFlags)
 
 	// create a new server
-	s := newHttpServer(getEnv("PORT", "8090"))
+	s := newHttpServer(os.Getenv("APP_PORT"))
 
 	// start the server
 	func() {
@@ -45,25 +47,30 @@ func setupHttpRouter() http.Handler {
 	router.HandleFunc("/devices/{id}", handler.GetByID).Methods(http.MethodGet)
 	router.Use(loggingMiddleware)
 
-	chanMeasurement := make(chan measurementUtils.Measurement)
-	publisher, err := measurementUtils.GetPublisher("stdout", chanMeasurement)
-	conumer := measurementUtils.MeasurementConsumer{chanMeasurement}
-	go conumer.Start()
-
+	// exchanger, err := measurementUtils.NewMeasurementStdoutExchanger(make(chan measurementUtils.Measurement))
+	exchanger, err := measurementUtils.NewMeasurementRabbitExchanger()
 	if err != nil {
-		log.Printf("Error initialize pubisher", err)
+		log.Printf("Error initialize exchanger", err)
 		os.Exit(1)
 	}
-	tickerHandler := api.NewTickerHandler(domain.NewTickerService(serivce, publisher))
+
+	tickerHandler := api.NewTickerHandler(domain.NewTickerService(serivce, exchanger))
 	router.HandleFunc("/start", tickerHandler.Start).Methods(http.MethodPost)
 	router.HandleFunc("/stop", tickerHandler.Stop).Methods(http.MethodPost)
+
+	err = exchanger.StartConsuming()
+	if err != nil {
+		log.Printf("Error start consuming", err)
+		os.Exit(1)
+	}
+
 	return router
 }
 
 func newHttpServer(port string) *http.Server {
 
 	router := setupHttpRouter()
-	log.Println("Starting on port %v", port)
+	log.Println("Starting on port", port)
 
 	listener := &http.Server{
 		Addr:    ":" + port,
@@ -71,16 +78,6 @@ func newHttpServer(port string) *http.Server {
 	}
 
 	return listener
-}
-
-func getEnv(envname string, defaultValue string) string {
-	env := os.Getenv(envname)
-
-	if env != "" {
-		return envname
-	}
-
-	return defaultValue
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {

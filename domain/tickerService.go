@@ -13,11 +13,11 @@ type TickerService interface {
 }
 type tickerService struct {
 	deviceService DeviceService
-	publisher     measurementUtils.MeasurementPublisher
+	publisher     measurementUtils.MeasurementExchanger
 	done          chan bool
 }
 
-func NewTickerService(deviceService DeviceService, publisher measurementUtils.MeasurementPublisher) TickerService {
+func NewTickerService(deviceService DeviceService, publisher measurementUtils.MeasurementExchanger) TickerService {
 	return &tickerService{deviceService: deviceService, publisher: publisher, done: make(chan bool)}
 }
 

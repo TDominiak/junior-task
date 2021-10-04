@@ -22,12 +22,11 @@ func TestTickerServiceStart(t *testing.T) {
 	}
 	repo.Save(d)
 	serivce := domain.NewDeviceService(repo)
-	chanMeasurement := make(chan measurementUtils.Measurement)
-	publisher, _ := measurementUtils.GetPublisher("stdout", chanMeasurement)
-	tickerService := domain.NewTickerService(serivce, publisher)
+	exchanger, _ := measurementUtils.NewMeasurementStdoutExchanger(make(chan measurementUtils.Measurement))
+	tickerService := domain.NewTickerService(serivce, exchanger)
 	tickerService.Start()
-
-	result := <-chanMeasurement
+	_ = exchanger.StartConsuming()
+	result := <-exchanger.Measurements
 	assert.Equal(t, measurementUtils.Measurement{Id: id.Hex(), Value: 1}, result)
 
 }

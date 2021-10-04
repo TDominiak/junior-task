@@ -17,7 +17,7 @@ import (
 
 func TestSaveOK(t *testing.T) {
 
-	handlerTest := NewHandler(domain.NewDeviceService(repository.NewInMemortRepository()))
+	handlerTest := NewDeviceHandler(domain.NewDeviceService(repository.NewInMemortRepository()))
 	values := map[string]interface{}{"name": "test", "interval": 1, "value": 2.0}
 	jsonValue, _ := json.Marshal(values)
 	req, err := http.NewRequest(http.MethodPost, "/device", bytes.NewBuffer(jsonValue))
@@ -47,7 +47,7 @@ func TestGetByIDOK(t *testing.T) {
 
 	inMemoryTest.Save(d)
 
-	handlerTest := NewHandler(domain.NewDeviceService(inMemoryTest))
+	handlerTest := NewDeviceHandler(domain.NewDeviceService(inMemoryTest))
 	req, err := http.NewRequest(http.MethodPost, "/device", nil)
 	if err != nil {
 		t.Fatal(err)
