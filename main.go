@@ -37,8 +37,8 @@ func main() {
 func setupHttpRouter() http.Handler {
 	router := mux.NewRouter()
 
-	repo := repository.NewInMemortRepository()
-	// repo := repository.NewMongoRepository("mongodb://localhost:27017", "device", 5)
+	// repo := repository.NewInMemortRepository() a
+	repo := repository.NewMongoRepository(os.Getenv("MONGO_URL"), "device", 5)
 	serivce := domain.NewDeviceService(repo)
 	handler := api.NewDeviceHandler(serivce)
 
