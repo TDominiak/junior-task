@@ -25,7 +25,7 @@ func (ms *MeasurementStdoutExchanger) StartConsuming() error {
 
 	go func() {
 		for m := range ms.measurements {
-			// savePoint(m, ms.Writer)
+			savePoint(m, ms.Writer)
 			log.Printf("Measurements recaived from device %v", m.Id)
 		}
 	}()

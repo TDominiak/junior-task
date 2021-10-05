@@ -1,0 +1,39 @@
+version: '3'
+services:
+  influxdb:
+    image: quay.io/influxdb/influxdb:v2.0.4
+    ports:
+      - "8086:8086"
+  influxdb_cli:
+    links:
+      - influxdb
+    image: quay.io/influxdb/influxdb:v2.0.4
+    entrypoint: influx setup --bucket ${INFLUXDB_INIT_BUCKET} -t ${INFLUXDB_INIT_TOKEN} -o ${INFLUXDB_INIT_ORG} --username=${INFLUXDB_INIT_USERNAME} --password=${INFLUXDB_INIT_PASSWORD} --host=http://influxdb:8086 -f
+    restart: on-failure:5
+    depends_on:
+      - influxdb
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+  amqp:
+    image: rabbitmq
+    ports:
+      - "5672:5672"
+  app:
+    build: .
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    environment:
+      - INFLUX_URL=http://influxdb:8086
+      - APP_PORT=${APP_PORT}
+      - INFLUX_TOKEN=${INFLUXDB_INIT_TOKEN}
+      - INFLUXDB_INIT_BUCKET=${INFLUXDB_INIT_BUCKET}
+      - INFLUXDB_INIT_ORG=${INFLUXDB_INIT_ORG}
+      - MONGO_URL=mongodb://mongodb:27017
+      - AMQP_URL=amqp://guest:guest@amqp:5672/
+    restart: on-failure
+
+networks:
+    default:
+      driver: bridge

@@ -2,6 +2,7 @@ package measurementUtils
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -30,12 +31,13 @@ func savePoint(m Measurement, mw api.WriteAPIBlocking) {
 
 func NewClientInflux() api.WriteAPIBlocking {
 
-	client := influxdb2.NewClient(os.Getenv("INFLUX_URL"), os.Getenv("INFLUX_TOKEN"))
+	client := influxdb2.NewClient(os.Getenv("INFLUX_URL"),
+		fmt.Sprintf("%s:%s", os.Getenv("INFLUXDB_INIT_USERNAME"), os.Getenv("INFLUXDB_INIT_PASSWORD")))
 	if _, err := client.Health(context.Background()); err != nil {
 		log.Fatal(err.Error())
 		os.Exit(1)
 	}
-	writeAPI := client.WriteAPIBlocking("", "tsm")
+	writeAPI := client.WriteAPIBlocking(os.Getenv("INFLUXDB_INIT_ORG"), os.Getenv("INFLUXDB_INIT_BUCKET"))
 
 	return writeAPI
 }

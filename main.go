@@ -50,7 +50,7 @@ func setupHttpRouter() http.Handler {
 	// exchanger, err := measurementUtils.NewMeasurementStdoutExchanger(make(chan measurementUtils.Measurement))
 	exchanger, err := measurementUtils.NewMeasurementRabbitExchanger()
 	if err != nil {
-		log.Printf("Error initialize exchanger", err)
+		log.Printf("Error initialize exchanger: %s", err)
 		os.Exit(1)
 	}
 
@@ -60,7 +60,7 @@ func setupHttpRouter() http.Handler {
 
 	err = exchanger.StartConsuming()
 	if err != nil {
-		log.Printf("Error start consuming", err)
+		log.Printf("Error start consuming: %s", err)
 		os.Exit(1)
 	}
 
